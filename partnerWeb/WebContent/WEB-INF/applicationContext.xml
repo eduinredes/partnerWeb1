@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.2.xsd
+    http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+    http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.1.xsd
+    http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.1.xsd
+    http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd">
+
+	<!-- Escanea el classpath buscando anotaciones (eg: @Service, @Repository 
+		etc) -->
+	<context:annotation-config />
+	<context:component-scan base-package="com.asc.*" />
+
+	<!-- Con esto Spring MVC reconoce las anotaciones como RequestMapping que 
+		nos harán falta más tarde. -->
+	<mvc:resources mapping="/resources/**" location="/WEB-INF/resources/" />
+	<mvc:resources location="/WEB-INF/resources/images/"
+		mapping="/images/**" />
+	<mvc:resources location="/WEB-INF/resources/css/"
+		mapping="/css/**" />
+
+	<mvc:annotation-driven />
+
+	<bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="url" value="jdbc:mysql://localhost:3306/partnerWeb" />
+		<property name="username" value="root" />
+		<property name="password" value="Admin123" />
+	</bean>
+
+	<!-- Hibernate Session Factory -->
+	<bean id="mySessionFactory"
+		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="packagesToScan">
+			<array>
+				<value>com.asc.entities</value>
+			</array>
+		</property>
+		<property name="hibernateProperties">
+			<value>
+				hibernate.dialect=org.hibernate.dialect.MySQLInnoDBDialect
+				hibernate.show_sql=true
+			</value>
+		</property>
+	</bean>
+
+	<aop:aspectj-autoproxy />
+
+	<!-- Hibernate Transaction Manager -->
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+		<property name="sessionFactory" ref="mySessionFactory" />
+	</bean>
+
+	<!-- Activates annotation based transaction management -->
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+	<beans:bean id="messageSource"
+		class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<beans:property name="basename" value="classpath:locale/messages" />
+		<beans:property name="defaultEncoding" value="UTF-8" />
+	</beans:bean>
+
+	<beans:bean id="localeResolver"
+		class="org.springframework.web.servlet.i18n.CookieLocaleResolver">
+		<beans:property name="defaultLocale" value="es" />
+		<beans:property name="cookieName" value="SenderLocaleCookie"></beans:property>
+		<beans:property name="cookieMaxAge" value="-1"></beans:property>
+	</beans:bean>
+
+	<mvc:interceptors>
+		<beans:bean
+			class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor">
+			<beans:property name="paramName" value="locale" />
+		</beans:bean>
+	</mvc:interceptors>
+
+	<!-- Activa thymeleaf -->
+	<!-- <bean id="templateResolver" class="org.thymeleaf.templateresolver.ServletContextTemplateResolver"> 
+		<property name="prefix" value="/WEB-INF/views/" /> <property name="suffix" 
+		value=".html" /> <property name="templateMode" value="HTML5" /> <property 
+		name="cacheable" value="false" /> </bean> <bean id="templateEngine" class="org.thymeleaf.spring4.SpringTemplateEngine"> 
+		<property name="templateResolver" ref="templateResolver" /> </bean> <bean 
+		class="org.thymeleaf.spring4.view.ThymeleafViewResolver"> <property name="templateEngine" 
+		ref="templateEngine" /> <property name="characterEncoding" value="UTF-8" 
+		/> </bean> -->
+	<bean
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix">
+			<value>/WEB-INF/views/</value>
+		</property>
+		<property name="suffix">
+			<value>.jsp</value>
+		</property>
+	</bean>
+</beans>
